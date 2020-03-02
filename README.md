@@ -23,8 +23,10 @@
       		waringError := "这是waringError!"
       		log.Waring(waringError)
       		time.Sleep(time.Second*2)
-      		errorError := "这是errorError!"
-      		log.Error(errorError)
+            //errorError := "这是errorError!"
+		    id := 100
+		    name := "test error log"
+		    log.Error("这是一条error日志 %d %s", id, name)
       		time.Sleep(time.Second*2)
       		fataError := "这是fataError!"
       		log.Fata(fataError)
