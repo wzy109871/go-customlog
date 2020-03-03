@@ -11,16 +11,4 @@ const (
 	FATAL
 )
 
-type Log struct {
-	level logLevel
-}
 
-func NewLog(levelStr string) *Log {
-	level, err := parseLoglevel(levelStr)
-	if err != nil {
-		panic(err)
-	}
-	return &Log{
-		level: level,
-	}
-}
