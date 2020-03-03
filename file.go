@@ -24,7 +24,7 @@ func NewFileLog(levelStr, filepath, filename string) *FileLog {
 	fileLog.level = level
 	fileLog.filepath = filepath
 	fileLog.filename = filename
-	err := fileLog.initFileobj()
+	err = fileLog.initFileobj()
 	if err != nil {
 		panic(err)
 	}
