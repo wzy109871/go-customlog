@@ -44,6 +44,7 @@ import (
 
 func main() {
 	log := customLog.NewFileLog("info","./log","wzylog.log")
+	defer log.FileClose()
 	//模拟debug错误
 	//模拟info错误
 	//模拟waring错误

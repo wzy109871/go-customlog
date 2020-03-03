@@ -14,14 +14,12 @@ type FileLog struct {
 	errfileobj *os.File
 }
 
-
-
 func NewFileLog(levelStr, filepath, filename string) *FileLog {
 	level, err := parseLoglevel(levelStr)
 	if err != nil {
 		panic(err)
 	}
-	os.MkdirAll(filepath,0644)
+	os.MkdirAll(filepath, 0644)
 	var fileLog FileLog
 	fileLog.level = level
 	fileLog.filepath = filepath
@@ -46,6 +44,11 @@ func (lg *FileLog) initFileobj() error {
 	lg.fileobj = fileobj
 	lg.errfileobj = errfileobj
 	return nil
+}
+
+func (lg *FileLog) FileClose() {
+	lg.fileobj.Close()
+	lg.errfileobj.Close()
 }
 
 func (lg *FileLog) fileprintLog(le logLevel, msg string, a ...interface{}) {
