@@ -43,7 +43,7 @@ import (
 )
 
 func main() {
-	log := customLog.NewFileLog("info","./log","wzylog.log")
+	log := customLog.NewFileLog("info","./log","wzylog.log",2*1024)
 	defer log.FileClose()
 	//模拟debug错误
 	//模拟info错误
@@ -53,20 +53,20 @@ func main() {
 	for {
 		debugError := "这是debugError!"
 		log.FileDebug(debugError)
-		time.Sleep(time.Second*2)
+		time.Sleep(time.Second)
 		infoError := "这是infoError!"
 		log.FileInfo(infoError)
-		time.Sleep(time.Second*2)
+		time.Sleep(time.Second)
 		waringError := "这是waringError!"
 		log.FileWaring(waringError)
-		time.Sleep(time.Second*2)
+		time.Sleep(time.Second)
 		//errorError := "这是errorError!"
 		id := 100
 		name := "test error log"
 		log.FileError("这是一条error日志 %d %s", id, name)
-		time.Sleep(time.Second*2)
+		time.Sleep(time.Second)
 		fataError := "这是fataError!"
 		log.FileFata(fataError)
-		time.Sleep(time.Second*2)
+		time.Sleep(time.Second)
 	}
 }
