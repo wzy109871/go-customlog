@@ -14,6 +14,16 @@ type FileLog struct {
 	fileobj     *os.File
 	errfileobj  *os.File
 	maxFileSize int64
+	logChan     chan *logMsg
+}
+
+type logMsg struct {
+	level     logLevel
+	str       string
+	funcName  string
+	fileName  string
+	timestamp string
+	line      int
 }
 
 func NewFileLog(levelStr, filepath, filename string, maxSize int64) *FileLog {
@@ -27,6 +37,7 @@ func NewFileLog(levelStr, filepath, filename string, maxSize int64) *FileLog {
 	fileLog.filepath = filepath
 	fileLog.filename = filename
 	fileLog.maxFileSize = maxSize
+	fileLog.logChan = make(chan *logMsg, 50000)
 	err = fileLog.initFileobj()
 	if err != nil {
 		panic(err)
@@ -49,6 +60,7 @@ func (lg *FileLog) initFileobj() error {
 	}
 	lg.fileobj = fileobj
 	lg.errfileobj = errfileobj
+	go lg.writeLogBackground()
 	return nil
 }
 
@@ -88,25 +100,48 @@ func (lg *FileLog) splitFile(file *os.File) (*os.File, error) {
 func (lg *FileLog) fileprintLog(le logLevel, msg string, a ...interface{}) {
 	str := fmt.Sprintf(msg, a...)
 	funcName, fileName, line := getInfo(3)
-	if lg.checkFileSize(lg.fileobj) {
-		newFile, err := lg.splitFile(lg.fileobj)
-		if err != nil {
-			return
-		}
-		lg.fileobj = newFile
+	logTmp := &logMsg{
+		timestamp: getNowtime(),
+		level:     le,
+		fileName:  fileName,
+		funcName:  funcName,
+		line:      line,
+		str:       str,
 	}
-	fmt.Fprintf(lg.fileobj, "[%s] [%s] [%s:%s:%d] %s\n", getNowtime(), unparseLoglevel(le), fileName, funcName, line, str)
-	if le >= ERROR {
-		if lg.checkFileSize(lg.errfileobj) {
-			newFile, err := lg.splitFile(lg.errfileobj)
-			if err != nil {
-				return
-			}
-			lg.errfileobj = newFile
-		}
-		fmt.Fprintf(lg.errfileobj, "[%s] [%s] [%s:%s:%d] %s\n", getNowtime(), unparseLoglevel(le), fileName, funcName, line, str)
+	select {
+	case lg.logChan <- logTmp:
+	default:
+		// 把日志就丢掉保证不出现阻塞
 	}
 
+}
+
+func (lg *FileLog) writeLogBackground() {
+	for {
+		select {
+		case lgTmp := <-lg.logChan:
+			if lg.checkFileSize(lg.fileobj) {
+				newFile, err := lg.splitFile(lg.fileobj)
+				if err != nil {
+					return
+				}
+				lg.fileobj = newFile
+			}
+			fmt.Fprintf(lg.fileobj, "[%s] [%s] [%s:%s:%d] %s\n", lgTmp.timestamp, unparseLoglevel(lgTmp.level), lgTmp.fileName, lgTmp.funcName, lgTmp.line, lgTmp.str)
+			if lgTmp.level >= ERROR {
+				if lg.checkFileSize(lg.errfileobj) {
+					newFile, err := lg.splitFile(lg.errfileobj)
+					if err != nil {
+						return
+					}
+					lg.errfileobj = newFile
+				}
+				fmt.Fprintf(lg.errfileobj, "[%s] [%s] [%s:%s:%d] %s\n", lgTmp.timestamp, unparseLoglevel(lgTmp.level), lgTmp.fileName, lgTmp.funcName, lgTmp.line, lgTmp.str)
+			}
+		default:
+			time.Sleep(time.Millisecond * 500)
+		}
+	}
 }
 
 func (lg *FileLog) FileDebug(msg string, a ...interface{}) {
