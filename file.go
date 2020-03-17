@@ -26,7 +26,7 @@ type logMsg struct {
 	line      int
 }
 
-var Log *FileLog
+var Log =new(FileLog)
 
 func InitFileLog(levelStr, filepath, filename string, maxSize int64) {
 	level, err := parseLoglevel(levelStr)
