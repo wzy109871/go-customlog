@@ -26,23 +26,23 @@ type logMsg struct {
 	line      int
 }
 
-func NewFileLog(levelStr, filepath, filename string, maxSize int64) *FileLog {
+var Log *FileLog
+
+func InitFileLog(levelStr, filepath, filename string, maxSize int64) {
 	level, err := parseLoglevel(levelStr)
 	if err != nil {
 		panic(err)
 	}
 	os.MkdirAll(filepath, 0644)
-	var fileLog FileLog
-	fileLog.level = level
-	fileLog.filepath = filepath
-	fileLog.filename = filename
-	fileLog.maxFileSize = maxSize
-	fileLog.logChan = make(chan *logMsg, 50000)
-	err = fileLog.initFileobj()
+	Log.level = level
+	Log.filepath = filepath
+	Log.filename = filename
+	Log.maxFileSize = maxSize
+	Log.logChan = make(chan *logMsg, 50000)
+	err = Log.initFileobj()
 	if err != nil {
 		panic(err)
 	}
-	return &fileLog
 
 }
 
